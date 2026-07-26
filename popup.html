@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>PromptLens</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup">
+    <header class="topbar">
+      <div class="brand">
+        <svg width="20" height="20" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" id="brand-mark"></svg>
+        <span class="brand-name">PromptLens</span>
+      </div>
+      <button class="icon-btn" id="open-settings" type="button" title="Settings" aria-label="Open settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <section class="section">
+      <div class="segmented" id="provider-segmented"></div>
+      <p class="inline-warning" id="no-key-warning" hidden>No API key set — open settings to add one.</p>
+    </section>
+
+    <div class="hr"></div>
+
+    <section class="section">
+      <div class="row">
+        <div class="row-copy">
+          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"></path>
+          </svg>
+          <div>
+            <p class="row-title">IP-safe mode</p>
+            <p class="row-sub">No text, brands, logos, or IP in prompts</p>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="ip-safe-toggle" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+      </div>
+      <button type="button" class="link-btn" id="ip-safe-customize-btn">
+        <span>Customize</span><span class="chevron">▾</span>
+      </button>
+      <div class="check-list" id="ip-safe-checks" hidden></div>
+    </section>
+
+    <div class="hr"></div>
+
+    <section class="section">
+      <div class="row">
+        <div class="row-copy">
+          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          </svg>
+          <div>
+            <p class="row-title">Icon mode</p>
+            <p class="row-sub">Icons/icon sets get a solid white background</p>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="icon-mode-toggle" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+        </label>
+      </div>
+      <div class="icon-grid-block" id="icon-grid-block" hidden>
+        <p class="grid-label">Icons per bundle</p>
+        <div class="chip-row" id="icon-grid-chips"></div>
+        <div class="grid-custom" id="icon-grid-custom" hidden>
+          <input type="number" min="1" max="12" class="grid-input" id="icon-grid-rows" aria-label="Rows" />
+          <span class="grid-x">×</span>
+          <input type="number" min="1" max="12" class="grid-input" id="icon-grid-cols" aria-label="Columns" />
+          <span class="grid-total" id="icon-grid-total"></span>
+        </div>
+      </div>
+    </section>
+
+    <div class="hr"></div>
+
+    <section class="section">
+      <button type="button" class="primary-btn" id="select-mode-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <path d="m21 15-5-5L5 21"></path>
+        </svg>
+        <span>Select images on this page</span>
+      </button>
+      <p class="row-sub select-mode-sub">Batch-generate prompts for several images at once.</p>
+    </section>
+
+    <div class="hr" id="last-divider" hidden></div>
+
+    <section class="section" id="last-section" hidden>
+      <div class="last-head">
+        <p class="row-title">Last prompt</p>
+        <span class="badge" id="last-badge" hidden>IP-safe</span>
+        <span class="badge" id="last-icon-badge" hidden>Icon</span>
+      </div>
+      <p class="last-text" id="last-text"></p>
+      <button type="button" class="link-btn" id="last-copy">Copy prompt</button>
+    </section>
+
+    <p class="footer-hint">Right-click any image → <strong>Generate AI Prompt</strong><br />or select several above for batch mode</p>
+  </div>
+  <script src="constants.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

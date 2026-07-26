@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "PromptLens — Image to AI Prompt",
+  "short_name": "PromptLens",
+  "version": "1.4.0",
+  "description": "Right-click any image (or select several at once) to instantly generate detailed, IP-safe AI art prompts using Groq, Gemini, or Mistral vision models.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "scripting",
+    "activeTab",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "PromptLens"
+  },
+  "options_page": "options.html",
+  "minimum_chrome_version": "110"
+}

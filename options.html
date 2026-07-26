@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>PromptLens Settings</title>
+<link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <svg width="26" height="26" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" id="brand-mark"></svg>
+        <div>
+          <p class="eyebrow">Settings</p>
+          <h1>PromptLens</h1>
+        </div>
+      </div>
+      <p class="brand-sub">Turn any image into a ready-to-use AI prompt, right from the right-click menu.</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Providers</h2>
+          <p class="panel-desc">Add a key for any provider you use, then choose which one is active. Keys are stored only in your browser and sent directly to that provider — never through a third-party server.</p>
+        </div>
+
+        <div class="providers" id="providers"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Prompt style</h2>
+          <p class="panel-desc">Choose what PromptLens should write when you generate a prompt from an image.</p>
+        </div>
+        <div class="style-options" id="style-options"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-head-row">
+            <h2>IP-safe mode</h2>
+            <label class="pswitch-lg">
+              <input type="checkbox" id="ip-safe-toggle" />
+              <span class="pswitch-lg-track"><span class="pswitch-lg-thumb"></span></span>
+            </label>
+          </div>
+          <p class="panel-desc">
+            For contributors to Adobe Stock, Shutterstock, and similar marketplaces that reject images
+            containing third-party IP. When on, PromptLens instructs the model to leave text, brand names,
+            logos, and other recognizable intellectual property out of the generated prompt entirely.
+          </p>
+        </div>
+        <div class="ip-safe-grid" id="ip-safe-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-head-row">
+            <h2>Icon mode</h2>
+            <label class="pswitch-lg">
+              <input type="checkbox" id="icon-mode-toggle" />
+              <span class="pswitch-lg-track"><span class="pswitch-lg-thumb"></span></span>
+            </label>
+          </div>
+          <p class="panel-desc">
+            Vision models tend to describe icons like photos — backgrounds, lighting, materials — which
+            produces unusable prompts for icon work. When on, PromptLens first checks whether the image is a
+            UI icon or a bundle/set of icons; if it is, the prompt is written in icon-design language with an
+            explicit solid white background instead. Ordinary photos and scenes are unaffected.
+          </p>
+        </div>
+        <div class="icon-grid-panel" id="icon-grid-panel">
+          <label class="field-label">Icons per bundle</label>
+          <p class="hint">
+            Pin the prompt to an exact grid size — useful for marketplace listings that expect a specific
+            count (e.g. a "9-icon set"). "Auto" describes whatever's actually in the source image instead.
+          </p>
+          <div class="chip-row" id="icon-grid-chips"></div>
+          <div class="grid-custom" id="icon-grid-custom" hidden>
+            <input type="number" min="1" max="12" class="grid-input" id="icon-grid-rows" aria-label="Rows" />
+            <span class="grid-x">×</span>
+            <input type="number" min="1" max="12" class="grid-input" id="icon-grid-cols" aria-label="Columns" />
+            <span class="grid-total" id="icon-grid-total"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Recent prompts</h2>
+          <p class="panel-desc">Your last 25 generations, kept locally on this device.</p>
+        </div>
+        <div class="history" id="history"></div>
+        <button class="btn btn-ghost" id="clear-history">Clear history</button>
+      </section>
+    </main>
+
+    <div class="save-bar">
+      <span class="save-status" id="save-status">All changes save automatically</span>
+    </div>
+  </div>
+
+  <template id="provider-card-template">
+    <article class="provider-card">
+      <div class="provider-row">
+        <label class="radio">
+          <input type="radio" name="active-provider" />
+          <span class="radio-dot"></span>
+        </label>
+        <h3 class="provider-name"></h3>
+        <a class="provider-link" target="_blank" rel="noopener">Get API key ↗</a>
+      </div>
+
+      <label class="field-label" data-for="key">API key</label>
+      <div class="key-row">
+        <input type="password" class="input key-input" autocomplete="off" spellcheck="false" />
+        <button class="btn btn-icon toggle-visibility" type="button" title="Show/hide key">👁</button>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced: model name</summary>
+        <input type="text" class="input model-input" spellcheck="false" />
+        <p class="hint model-hint"></p>
+      </details>
+
+      <div class="provider-actions">
+        <button class="btn btn-secondary test-btn" type="button">Test connection</button>
+        <span class="test-result"></span>
+      </div>
+    </article>
+  </template>
+
+  <script src="constants.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
