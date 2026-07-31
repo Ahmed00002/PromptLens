@@ -73,7 +73,7 @@ async function callGroq(apiKey, model, base64Image, mimeType, instruction) {
     text = await res.text();
   }
 
-  if (!res.ok) throw new Error(readableApiError("Groq", res.status, text));
+  if (!res.ok) throwApiError("Groq", res, text);
   const data = JSON.parse(text);
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("Groq returned an empty response. Try a different model in settings.");
@@ -96,7 +96,7 @@ async function callGemini(apiKey, model, base64Image, mimeType, instruction) {
     }),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(readableApiError("Gemini", res.status, text));
+  if (!res.ok) throwApiError("Gemini", res, text);
   const data = JSON.parse(text);
   const content = data?.candidates?.[0]?.content?.parts
     ?.filter((p) => !p.thought)
@@ -132,7 +132,7 @@ async function callMistral(apiKey, model, base64Image, mimeType, instruction) {
     }),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(readableApiError("Mistral", res.status, text));
+  if (!res.ok) throwApiError("Mistral", res, text);
   const data = JSON.parse(text);
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("Mistral returned an empty response. Try a different model in settings.");
@@ -157,6 +157,22 @@ function readableApiError(providerLabel, status, rawBody) {
     return `${providerLabel} model not found (404). The model name in settings may be outdated — check ${providerLabel}'s current model list.`;
   }
   return `${providerLabel} error (${status}): ${String(detail).slice(0, 300)}`;
+}
+
+/**
+ * Builds and throws the Error for a failed API response, attaching how long the provider itself
+ * says to wait (its Retry-After header, when present) as `err.retryAfterMs` on 429s. Groq, Gemini,
+ * and Mistral all can send this on rate limits, and it's a much better wait time than a guess —
+ * generateWithFallback's retry-before-fallback logic uses it directly.
+ */
+function throwApiError(providerLabel, res, rawBody) {
+  const err = new Error(readableApiError(providerLabel, res.status, rawBody));
+  if (res.status === 429) {
+    const retryAfter = res.headers?.get?.("retry-after");
+    const seconds = retryAfter != null ? Number(retryAfter) : NaN;
+    if (!Number.isNaN(seconds) && seconds > 0) err.retryAfterMs = seconds * 1000;
+  }
+  throw err;
 }
 
 /** Lightweight text-only ping used by the "Test" button in Settings. */
@@ -243,17 +259,95 @@ function extractFinalAnswer(rawText) {
   return { cleaned, truncated: false };
 }
 
+/** Dispatches to the right provider's raw HTTP call. Shared by regular generation, Adobe Stock metadata, and anything else that needs a vision call. */
+async function callProviderRaw(providerId, apiKey, model, base64Image, mimeType, instruction) {
+  if (providerId === "groq") return callGroq(apiKey, model, base64Image, mimeType, instruction);
+  if (providerId === "gemini") return callGemini(apiKey, model, base64Image, mimeType, instruction);
+  if (providerId === "mistral") return callMistral(apiKey, model, base64Image, mimeType, instruction);
+  throw new Error(`Unknown provider: ${providerId}`);
+}
+
+/**
+ * Classifies a thrown error as a capacity issue (rate limit / quota) vs. anything else. Only
+ * capacity errors trigger provider fallback in generateWithFallback below — a malformed
+ * response or a bad image won't be fixed by switching providers, so those fail immediately
+ * rather than being retried against a different model that has the same problem.
+ */
+function isRateLimitError(err) {
+  const message = String((err && err.message) || err || "").toLowerCase();
+  return (
+    message.includes("429") ||
+    message.includes("rate limit") ||
+    message.includes("quota") ||
+    message.includes("resource exhausted") ||
+    message.includes("resource_exhausted") ||
+    message.includes("too many requests")
+  );
+}
+
+/** Configured providers (have an API key set), starting with the active one, in a stable order. */
+function getFallbackProviderOrder(settings) {
+  const configured = Object.keys(PROVIDER_META).filter(
+    (id) => settings.providers[id] && settings.providers[id].apiKey
+  );
+  const active = settings.activeProvider;
+  return [active, ...configured.filter((id) => id !== active)].filter((id) => configured.includes(id));
+}
+
+/**
+ * Runs `taskFn(providerId, providerConfig)` against the person's configured providers in
+ * priority order, falling back to the next one ONLY on a capacity error (rate limit/quota) —
+ * anything else fails immediately rather than being retried against a different model, since
+ * that wouldn't fix it. Used by regular generation, batch mode, and Adobe Stock auto-fill so a
+ * rate limit on one provider doesn't stall everything when another configured provider is idle.
+ *
+ * On a rate limit, each provider gets one backoff-and-retry *before* moving on: free-tier limits
+ * (especially Groq/Gemini's per-minute request or token budgets, which a handful of image calls
+ * can burn through fast) are usually short windows that clear on their own within seconds, so
+ * immediately jumping to another provider — or failing the file outright once every provider's
+ * been tried — throws away a call that would likely have succeeded a moment later. The wait uses
+ * the provider's own Retry-After header when it sends one, since that's a real number rather than
+ * a guess; otherwise a fixed short backoff.
+ *
+ * Resolves to { result, providerId, usedFallback }.
+ */
+async function generateWithFallback(settings, taskFn) {
+  const order = getFallbackProviderOrder(settings);
+  if (!order.length) {
+    throw new Error("No AI provider has an API key set. Open PromptLens settings to add one.");
+  }
+  const DEFAULT_BACKOFF_MS = 4000;
+  const MAX_BACKOFF_MS = 15000;
+  let lastErr = null;
+  for (let i = 0; i < order.length; i++) {
+    const providerId = order[i];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await taskFn(providerId, settings.providers[providerId]);
+        return { result, providerId, usedFallback: i > 0 };
+      } catch (err) {
+        lastErr = err;
+        if (!isRateLimitError(err)) throw err; // not a capacity error — retrying/falling back won't help
+        const isLastProviderThisRound = i === order.length - 1;
+        if (attempt === 1) {
+          if (isLastProviderThisRound) throw err;
+          break; // exhausted the retry for this provider — move to the next one
+        }
+        const waitMs = Math.min(err.retryAfterMs || DEFAULT_BACKOFF_MS, MAX_BACKOFF_MS);
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function generatePromptFromImage(providerId, providerConfig, base64Image, mimeType, outputStyle, ipSafe, iconMode) {
   const instruction = buildPromptInstruction(outputStyle, ipSafe, iconMode);
   const { apiKey, model } = providerConfig;
   if (!apiKey) {
     throw new Error(`No API key set for ${PROVIDER_META[providerId]?.label || providerId}. Open PromptLens settings to add one.`);
   }
-  let raw;
-  if (providerId === "groq") raw = await callGroq(apiKey, model, base64Image, mimeType, instruction);
-  else if (providerId === "gemini") raw = await callGemini(apiKey, model, base64Image, mimeType, instruction);
-  else if (providerId === "mistral") raw = await callMistral(apiKey, model, base64Image, mimeType, instruction);
-  else throw new Error(`Unknown provider: ${providerId}`);
+  const raw = await callProviderRaw(providerId, apiKey, model, base64Image, mimeType, instruction);
 
   const { cleaned, truncated } = extractFinalAnswer(raw);
   if (truncated) {
@@ -269,4 +363,30 @@ async function generatePromptFromImage(providerId, providerConfig, base64Image, 
     );
   }
   return cleaned;
+}
+
+/**
+ * One combined vision-model call that returns Adobe Stock's two required fields (title +
+ * keywords) as structured JSON, instead of the free-text prompt used everywhere else in
+ * PromptLens. Reuses the same reasoning-strip safety net as generatePromptFromImage, since a
+ * reasoning model can burn its token budget "thinking" here too.
+ */
+async function generateAdobeStockMetadata(providerId, providerConfig, base64Image, mimeType, ipSafe, lengthSettings) {
+  const instruction = buildAdobeStockInstruction(ipSafe, lengthSettings);
+  const { apiKey, model } = providerConfig;
+  if (!apiKey) {
+    throw new Error(`No API key set for ${PROVIDER_META[providerId]?.label || providerId}. Open PromptLens settings to add one.`);
+  }
+  const raw = await callProviderRaw(providerId, apiKey, model, base64Image, mimeType, instruction);
+
+  const { cleaned, truncated } = extractFinalAnswer(raw);
+  if (truncated) {
+    throw new Error(
+      `${PROVIDER_META[providerId]?.label || providerId}'s model spent its whole reply "thinking" and never reached the metadata.`
+    );
+  }
+  if (!cleaned) {
+    throw new Error(`${PROVIDER_META[providerId]?.label || providerId} returned no usable text.`);
+  }
+  return parseAdobeStockJson(cleaned, lengthSettings);
 }

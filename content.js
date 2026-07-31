@@ -79,6 +79,10 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     .pl-actions { display: flex; gap: 8px; }
     .pl-btn {
@@ -183,9 +187,11 @@
     `;
   }
 
-  function showResult(prompt, providerLabel) {
+  function showResult(data) {
     const { body } = ensureCard();
     show();
+    const { prompt, providerLabel } = data || {};
+
     body.innerHTML = `
       <p class="pl-meta">Generated with ${escapeHtml(providerLabel)}</p>
       <div class="pl-prompt"></div>
@@ -195,6 +201,7 @@
       </div>
     `;
     body.querySelector(".pl-prompt").textContent = prompt;
+
     body.querySelector('[data-action="copy"]').addEventListener("click", (e) => {
       copyText(prompt, e.currentTarget);
     });
@@ -546,6 +553,7 @@
 
   function enterSelectMode() {
     if (selectModeActive) return;
+    hideHoverButton();
     selectModeActive = true;
     selectPhase = "selecting";
     renderSelectingBody();
@@ -559,6 +567,273 @@
     selectedImages.clear();
     batchItems = [];
     if (selectRefs) selectRefs.host.style.display = "none";
+  }
+
+  // ================= Hover quick-action button =================
+  // A tiny floating button appears over any qualifying image on hover — a faster alternative to
+  // the right-click menu for rapid-fire use. It always triggers the exact same PROMPTLENS_
+  // GENERATE_FROM_HOVER -> runGeneration() flow as the context-menu item, so the result shows up
+  // in the same pl-card as usual. Disabled automatically while select/batch mode is active, and
+  // toggleable from the popup or Settings (persisted via settings.hoverButton.enabled).
+
+  const HOVER_HOST_ID = "promptlens-hover-host";
+  const HOVER_BTN_SIZE = 30;
+  const HOVER_MIN_IMG_SIZE = 56; // a bit larger than batch mode's threshold so the button always fits comfortably
+  const HOVER_HIDE_DELAY = 160; // ms grace period so moving the pointer onto the button itself doesn't hide it
+
+  let hoverButtonEnabled = true; // updated from settings below; defaults to on
+  let hoverRefs = null;
+  let hoveredImg = null;
+  let hoverHideTimer = null;
+  let hoverRepositionQueued = false;
+
+  const HOVER_CSS = `
+    :host { all: initial; }
+    .plh-btn {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: ${HOVER_BTN_SIZE}px;
+      height: ${HOVER_BTN_SIZE}px;
+      border-radius: 999px;
+      background: #12141C;
+      border: 1px solid rgba(232, 163, 61, 0.55);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2147483647;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+    .plh-btn.is-visible { opacity: 1; pointer-events: auto; }
+    .plh-btn:hover { background: #1D2030; border-color: #E8A33D; }
+    .plh-btn:active { opacity: 0.85; }
+    .plh-btn svg { width: 16px; height: 16px; display: block; }
+  `;
+
+  function ensureHoverButton() {
+    if (hoverRefs) return hoverRefs;
+    const host = document.createElement("div");
+    host.id = HOVER_HOST_ID;
+    const shadow = host.attachShadow({ mode: "open" });
+    const style = document.createElement("style");
+    style.textContent = HOVER_CSS;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "plh-btn";
+    btn.setAttribute("aria-label", "Generate AI prompt for this image (PromptLens)");
+    btn.title = "Generate AI prompt (PromptLens)";
+    btn.innerHTML = apertureSvg(false);
+    shadow.appendChild(style);
+    shadow.appendChild(btn);
+    document.documentElement.appendChild(host);
+
+    // Hovering onto the button itself should cancel any pending hide from leaving the image.
+    btn.addEventListener("mouseenter", () => {
+      if (hoverHideTimer) {
+        clearTimeout(hoverHideTimer);
+        hoverHideTimer = null;
+      }
+    });
+    btn.addEventListener("mouseleave", scheduleHoverHide);
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!hoveredImg) return;
+      const srcUrl = hoveredImg.currentSrc || hoveredImg.src;
+      hideHoverButton();
+      chrome.runtime.sendMessage({ type: "PROMPTLENS_GENERATE_FROM_HOVER", srcUrl });
+    });
+
+    hoverRefs = { host, btn };
+    return hoverRefs;
+  }
+
+  function qualifiesForHover(img) {
+    if (!(img instanceof HTMLImageElement)) return false;
+    if (img.closest(`#${SELECT_HOST_ID}`) || img.closest(`#${HOST_ID}`) || img.closest(`#${HOVER_HOST_ID}`)) return false;
+    const rect = img.getBoundingClientRect();
+    if (rect.width < HOVER_MIN_IMG_SIZE || rect.height < HOVER_MIN_IMG_SIZE) return false;
+    const style = getComputedStyle(img);
+    if (style.visibility === "hidden" || style.display === "none" || Number(style.opacity) === 0) return false;
+    return Boolean(img.currentSrc || img.src);
+  }
+
+  function positionHoverButton(img) {
+    const { btn } = ensureHoverButton();
+    const rect = img.getBoundingClientRect();
+    const inset = 8;
+    let left = rect.right - HOVER_BTN_SIZE - inset;
+    let top = rect.top + inset;
+    // Clamp on-screen in case the image is larger than the viewport or hugging an edge.
+    left = Math.max(4, Math.min(left, window.innerWidth - HOVER_BTN_SIZE - 4));
+    top = Math.max(4, Math.min(top, window.innerHeight - HOVER_BTN_SIZE - 4));
+    btn.style.left = `${left}px`;
+    btn.style.top = `${top}px`;
+  }
+
+  function showHoverButton(img) {
+    if (!hoverButtonEnabled) return;
+    hoveredImg = img;
+    const { btn } = ensureHoverButton();
+    positionHoverButton(img);
+    btn.classList.add("is-visible");
+    if (hoverHideTimer) {
+      clearTimeout(hoverHideTimer);
+      hoverHideTimer = null;
+    }
+  }
+
+  function hideHoverButton() {
+    if (hoverHideTimer) {
+      clearTimeout(hoverHideTimer);
+      hoverHideTimer = null;
+    }
+    hoveredImg = null;
+    if (hoverRefs) hoverRefs.btn.classList.remove("is-visible");
+  }
+
+  function scheduleHoverHide() {
+    if (hoverHideTimer) clearTimeout(hoverHideTimer);
+    hoverHideTimer = setTimeout(hideHoverButton, HOVER_HIDE_DELAY);
+  }
+
+  function updateHoverPositionIfNeeded() {
+    hoverRepositionQueued = false;
+    if (!hoveredImg || !hoverRefs || !hoverRefs.btn.classList.contains("is-visible")) return;
+    if (!document.documentElement.contains(hoveredImg) || !qualifiesForHover(hoveredImg)) {
+      hideHoverButton();
+      return;
+    }
+    positionHoverButton(hoveredImg);
+  }
+
+  // Some sites (Pinterest, Adobe Stock, and most other "hover a thumbnail" galleries) layer their
+  // own hover overlay — a save button, license badge, gradient, etc. — directly on top of the
+  // image the instant it's hovered. That overlay then becomes the topmost hit-test target, so the
+  // browser reports a genuine "mouseout" on the <img> (relatedTarget = the site's overlay, not our
+  // button) even though the cursor never actually left the thumbnail. Relying on event targets
+  // alone can't tell those two situations apart, so we double-check with elementsFromPoint, which
+  // returns the *entire* stack of elements under a point rather than just the topmost one.
+  function isPointOnHoveredImage(x, y) {
+    if (!hoveredImg) return false;
+    if (typeof document.elementsFromPoint === "function") {
+      try {
+        return document.elementsFromPoint(x, y).includes(hoveredImg);
+      } catch (_) {
+        /* fall through to bounding-box check below */
+      }
+    }
+    const r = hoveredImg.getBoundingClientRect();
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
+
+  document.addEventListener(
+    "mouseover",
+    (e) => {
+      if (selectModeActive || !hoverButtonEnabled) return;
+      const img = e.target && e.target.closest && e.target.closest("img");
+      if (!img || !qualifiesForHover(img)) return;
+      if (img === hoveredImg) {
+        if (hoverHideTimer) {
+          clearTimeout(hoverHideTimer);
+          hoverHideTimer = null;
+        }
+        return;
+      }
+      showHoverButton(img);
+    },
+    true
+  );
+
+  document.addEventListener(
+    "mouseout",
+    (e) => {
+      if (!hoveredImg) return;
+      const img = e.target && e.target.closest && e.target.closest("img");
+      if (img !== hoveredImg) return;
+      // Moving the pointer straight onto the button itself is retargeted to our shadow host —
+      // don't start the hide timer in that case, the button's own mouseleave handles it instead.
+      if (hoverRefs && e.relatedTarget === hoverRefs.host) return;
+      // The pointer may still be sitting on the same image even though the reported target
+      // changed — e.g. the page just layered its own hover overlay on top of it. Don't hide yet.
+      if (isPointOnHoveredImage(e.clientX, e.clientY)) return;
+      scheduleHoverHide();
+    },
+    true
+  );
+
+  // Once a site's own overlay takes over hit-testing on top of the image (see above), further
+  // native mouseout events on the tracked <img> stop firing altogether — its closest("img") check
+  // never matches again, so the handler above can no longer detect a *real* exit either. This
+  // lightweight, rAF-throttled mousemove check is the fallback that keeps working in that case: it
+  // watches the pointer position directly instead of trusting whichever element the browser
+  // decides is topmost.
+  let hoverMoveCheckQueued = false;
+  document.addEventListener(
+    "mousemove",
+    (e) => {
+      if (!hoveredImg || hoverMoveCheckQueued) return;
+      hoverMoveCheckQueued = true;
+      const x = e.clientX;
+      const y = e.clientY;
+      const overButton = Boolean(hoverRefs) && e.target === hoverRefs.host;
+      requestAnimationFrame(() => {
+        hoverMoveCheckQueued = false;
+        if (!hoveredImg) return;
+        if (overButton || isPointOnHoveredImage(x, y)) {
+          if (hoverHideTimer) {
+            clearTimeout(hoverHideTimer);
+            hoverHideTimer = null;
+          }
+        } else if (!hoverHideTimer) {
+          scheduleHoverHide();
+        }
+      });
+    },
+    true
+  );
+
+  // Nested scrollable containers don't bubble "scroll", but the capture phase still sees them —
+  // keep the button glued to its image (or hide it once the image scrolls out of view/DOM).
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!hoveredImg || hoverRepositionQueued) return;
+      hoverRepositionQueued = true;
+      requestAnimationFrame(updateHoverPositionIfNeeded);
+    },
+    { capture: true, passive: true }
+  );
+
+  window.addEventListener("resize", () => {
+    if (!hoveredImg || hoverRepositionQueued) return;
+    hoverRepositionQueued = true;
+    requestAnimationFrame(updateHoverPositionIfNeeded);
+  });
+
+  // Load the current setting, and keep it live-updated if changed from the popup/Settings page
+  // while this page stays open (no need to refresh the tab for the toggle to take effect).
+  (async () => {
+    try {
+      const settings = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
+      hoverButtonEnabled = !settings || !settings.hoverButton ? true : Boolean(settings.hoverButton.enabled);
+      if (!hoverButtonEnabled) hideHoverButton();
+    } catch (_) {
+      /* keep default (enabled) if settings couldn't be read */
+    }
+  })();
+
+  if (chrome.storage && chrome.storage.onChanged) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== "local" || !changes.settings) return;
+      const next = changes.settings.newValue;
+      hoverButtonEnabled = !next || !next.hoverButton ? true : Boolean(next.hoverButton.enabled);
+      if (!hoverButtonEnabled) hideHoverButton();
+    });
   }
 
   document.addEventListener(
@@ -606,7 +881,7 @@
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === "PROMPTLENS_LOADING") showLoading();
-    if (message?.type === "PROMPTLENS_RESULT") showResult(message.prompt, message.providerLabel);
+    if (message?.type === "PROMPTLENS_RESULT") showResult(message);
     if (message?.type === "PROMPTLENS_ERROR") showError(message.message);
     if (message?.type === "PROMPTLENS_ENTER_SELECT_MODE") enterSelectMode();
     if (message?.type === "PROMPTLENS_BATCH_ITEM_UPDATE") handleBatchItemUpdate(message);

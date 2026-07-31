@@ -88,8 +88,120 @@
 
       <section class="panel">
         <div class="panel-head">
+          <div class="panel-head-row">
+            <h2>Hover quick-action button</h2>
+            <label class="pswitch-lg">
+              <input type="checkbox" id="hover-button-toggle" />
+              <span class="pswitch-lg-track"><span class="pswitch-lg-thumb"></span></span>
+            </label>
+          </div>
+          <p class="panel-desc">
+            Shows a small floating button over any image as soon as you hover it, so you can
+            generate a prompt with one click instead of opening the right-click menu each time —
+            handy for rapid-fire use across a page full of images. It triggers the exact same
+            generation as the right-click menu item, using whichever provider and style you have
+            set above. Turn it off if you'd rather keep hovering images free of any overlay.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-head-row">
+            <h2>Adobe Stock auto-fill</h2>
+            <label class="pswitch-lg">
+              <input type="checkbox" id="adobe-stock-enabled-toggle" />
+              <span class="pswitch-lg-track"><span class="pswitch-lg-thumb"></span></span>
+            </label>
+          </div>
+          <p class="panel-desc">
+            On the Adobe Stock contributor portal, generates a title and keywords for each
+            uploaded file and fills them in automatically — full auto-pilot across every
+            uploaded file by default. Files that already have a title are always skipped, never
+            overwritten. A generation failure on one file skips just that file and moves on; a
+            rate-limit-type failure automatically retries on the next configured provider first.
+            Master switch below — the feature does nothing at all while off.
+          </p>
+          <p class="setup-status" id="adobe-stock-setup-status"></p>
+        </div>
+
+        <div class="adobe-stock-fields" id="adobe-stock-fields">
+          <div class="field-row">
+            <label class="field-label" for="adobe-stock-auto-trigger">Auto-trigger on new uploads</label>
+            <label class="pswitch-lg">
+              <input type="checkbox" id="adobe-stock-auto-trigger" />
+              <span class="pswitch-lg-track"><span class="pswitch-lg-thumb"></span></span>
+            </label>
+          </div>
+          <p class="hint">
+            On: runs automatically the moment new files appear, no click needed. Off: only runs
+            when you click "Run now" in the popup while on the contributor portal.
+          </p>
+
+          <div class="seek-group">
+            <div class="seek-row">
+              <label class="field-label">Title length range</label>
+              <span class="seek-value" id="as-title-range-value">20–70 chars</span>
+            </div>
+            <div class="seek-dual">
+              <div class="seek-dual-item">
+                <span class="seek-dual-label">Min</span>
+                <input type="range" min="10" max="200" step="1" id="as-title-min" class="seek-bar" />
+              </div>
+              <div class="seek-dual-item">
+                <span class="seek-dual-label">Max</span>
+                <input type="range" min="10" max="200" step="1" id="as-title-max" class="seek-bar" />
+              </div>
+            </div>
+            <p class="hint">Adobe's field itself allows up to 200 characters; its own guidance is to keep titles well under that.</p>
+          </div>
+
+          <div class="seek-group">
+            <div class="seek-row">
+              <label class="field-label">Keyword count range</label>
+              <span class="seek-value" id="as-keyword-range-value">30–49</span>
+            </div>
+            <div class="seek-dual">
+              <div class="seek-dual-item">
+                <span class="seek-dual-label">Min</span>
+                <input type="range" min="5" max="49" step="1" id="as-keyword-min" class="seek-bar" />
+              </div>
+              <div class="seek-dual-item">
+                <span class="seek-dual-label">Max</span>
+                <input type="range" min="5" max="49" step="1" id="as-keyword-max" class="seek-bar" />
+              </div>
+            </div>
+            <p class="hint">Adobe requires 5–49 keywords; these sliders steer the target the AI aims for within that range.</p>
+          </div>
+
+          <div class="field-row">
+            <label class="field-label" for="as-keyword-type">Keyword type</label>
+            <select class="input" id="as-keyword-type"></select>
+          </div>
+          <p class="hint" id="as-keyword-type-hint">A natural blend of single words and short phrases, ordered by relevance (default).</p>
+
+          <div class="field-row">
+            <label class="field-label" for="adobe-stock-disclosure">Model/property-release toggle (not wired up yet)</label>
+            <select class="input" id="adobe-stock-disclosure" disabled>
+              <option value="off">Not answered automatically</option>
+              <option value="yes">Always answer Yes</option>
+              <option value="no">Always answer No</option>
+            </select>
+          </div>
+          <p class="hint">
+            This still needs a deliberate decision before it's wired up — the on-page "Yes/No"
+            toggle turned out to be a model/property-<em>release</em> question, not AI-content
+            disclosure as originally assumed, and auto-answering it incorrectly would be a real
+            (not just cosmetic) misstatement. Auto-fill currently leaves it untouched on every
+            file — you'll still need to answer it yourself.
+          </p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
           <h2>Recent prompts</h2>
-          <p class="panel-desc">Your last 25 generations, kept locally on this device.</p>
+          <p class="panel-desc">Your last 60 generations, kept locally on this device.</p>
         </div>
         <div class="history" id="history"></div>
         <button class="btn btn-ghost" id="clear-history">Clear history</button>

@@ -36,8 +36,10 @@ async function getSettings() {
     ...JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),
     ...settings,
     providers: { ...DEFAULT_SETTINGS.providers, ...(settings.providers || {}) },
+    hoverButton: { ...DEFAULT_SETTINGS.hoverButton, ...(settings.hoverButton || {}) },
     ipSafe: { ...DEFAULT_SETTINGS.ipSafe, ...(settings.ipSafe || {}) },
     iconMode: { ...DEFAULT_SETTINGS.iconMode, ...(settings.iconMode || {}) },
+    adobeStock: { ...DEFAULT_SETTINGS.adobeStock, ...(settings.adobeStock || {}) },
   };
 }
 
@@ -96,18 +98,10 @@ async function runGeneration(tabId, srcUrl) {
   await sendToTab(tabId, { type: "PROMPTLENS_LOADING" });
   try {
     const settings = await getSettings();
-    const providerId = settings.activeProvider;
-    const providerConfig = settings.providers[providerId];
-
     const { base64, mimeType } = await fetchImageAsBase64(srcUrl);
-    const prompt = await generatePromptFromImage(
-      providerId,
-      providerConfig,
-      base64,
-      mimeType,
-      settings.outputStyle,
-      settings.ipSafe,
-      settings.iconMode
+
+    const { result: prompt, providerId } = await generateWithFallback(settings, (pid, pconfig) =>
+      generatePromptFromImage(pid, pconfig, base64, mimeType, settings.outputStyle, settings.ipSafe, settings.iconMode)
     );
 
     await sendToTab(tabId, {
@@ -143,9 +137,6 @@ async function runGeneration(tabId, srcUrl) {
 async function runBatchGeneration(tabId, items) {
   const capped = items.slice(0, MAX_BATCH_ITEMS);
   const settings = await getSettings();
-  const providerId = settings.activeProvider;
-  const providerConfig = settings.providers[providerId];
-  const providerLabel = PROVIDER_META[providerId]?.label || providerId;
 
   let cursor = 0;
   async function worker() {
@@ -154,15 +145,10 @@ async function runBatchGeneration(tabId, items) {
       await sendToTab(tabId, { type: "PROMPTLENS_BATCH_ITEM_UPDATE", id: item.id, status: "loading" });
       try {
         const { base64, mimeType } = await fetchImageAsBase64(item.srcUrl);
-        const prompt = await generatePromptFromImage(
-          providerId,
-          providerConfig,
-          base64,
-          mimeType,
-          settings.outputStyle,
-          settings.ipSafe,
-          settings.iconMode
+        const { result: prompt, providerId } = await generateWithFallback(settings, (pid, pconfig) =>
+          generatePromptFromImage(pid, pconfig, base64, mimeType, settings.outputStyle, settings.ipSafe, settings.iconMode)
         );
+        const providerLabel = PROVIDER_META[providerId]?.label || providerId;
         await sendToTab(tabId, {
           type: "PROMPTLENS_BATCH_ITEM_UPDATE",
           id: item.id,
@@ -216,6 +202,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (tabId && srcUrl) await runGeneration(tabId, srcUrl);
       return;
     }
+    if (message?.type === "PROMPTLENS_GENERATE_FROM_HOVER") {
+      // Same single-image flow as the context-menu item — just triggered from the hover button
+      // instead of a right-click. Fire-and-forget; progress/result/error stream to the tab's card.
+      const tabId = sender.tab?.id;
+      if (tabId && message.srcUrl) runGeneration(tabId, message.srcUrl);
+      sendResponse({ ok: Boolean(tabId && message.srcUrl) });
+      return;
+    }
     if (message?.type === "GET_SETTINGS") {
       sendResponse(await getSettings());
       return;
@@ -245,6 +239,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         runBatchGeneration(tabId, message.items); // fire-and-forget; progress streams back per item
       }
       sendResponse({ ok: true });
+      return;
+    }
+    if (message?.type === "ADOBE_STOCK_GENERATE_METADATA") {
+      try {
+        const settings = await getSettings();
+        if (!settings.adobeStock?.enabled) {
+          sendResponse({ ok: false, message: "Adobe Stock automation is disabled in PromptLens settings." });
+          return;
+        }
+        const { base64, mimeType } = await fetchImageAsBase64(message.srcUrl);
+        const { result, providerId } = await generateWithFallback(settings, (pid, pconfig) =>
+          generateAdobeStockMetadata(pid, pconfig, base64, mimeType, settings.ipSafe, settings.adobeStock)
+        );
+        sendResponse({
+          ok: true,
+          title: result.title,
+          keywords: result.keywords,
+          providerId,
+          providerLabel: PROVIDER_META[providerId]?.label || providerId,
+        });
+      } catch (err) {
+        sendResponse({ ok: false, message: err.message || String(err) });
+      }
       return;
     }
     if (message?.type === "CLEAR_HISTORY") {

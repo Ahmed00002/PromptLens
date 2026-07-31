@@ -322,6 +322,12 @@ body {
   font-size: 11px;
 }
 
+.adobe-stock-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
 /* ---------- select/batch mode button ---------- */
 
 .primary-btn {

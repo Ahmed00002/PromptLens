@@ -16,7 +16,17 @@
   const iconGridColsInput = document.getElementById("icon-grid-cols");
   const iconGridTotal = document.getElementById("icon-grid-total");
 
+  const hoverButtonToggle = document.getElementById("hover-button-toggle");
+
   const selectModeBtn = document.getElementById("select-mode-btn");
+
+  const adobeStockDivider = document.getElementById("adobe-stock-divider");
+  const adobeStockSection = document.getElementById("adobe-stock-section");
+  const adobeStockToggle = document.getElementById("adobe-stock-toggle");
+  const adobeStockStatus = document.getElementById("adobe-stock-status");
+  const adobeStockActions = document.getElementById("adobe-stock-actions");
+  const adobeStockRunBtn = document.getElementById("adobe-stock-run-btn");
+  const adobeStockDiagBtn = document.getElementById("adobe-stock-diag-btn");
 
   const lastDivider = document.getElementById("last-divider");
   const lastSection = document.getElementById("last-section");
@@ -187,6 +197,21 @@
     await saveIconMode();
   });
 
+  // ---------- hover quick-action button ----------
+
+  function renderHoverButton() {
+    hoverButtonToggle.checked = Boolean(settings.hoverButton && settings.hoverButton.enabled);
+  }
+
+  hoverButtonToggle.addEventListener("change", async () => {
+    settings.hoverButton = settings.hoverButton || {};
+    settings.hoverButton.enabled = hoverButtonToggle.checked;
+    settings = await chrome.runtime.sendMessage({
+      type: "SAVE_SETTINGS",
+      payload: { hoverButton: settings.hoverButton },
+    });
+  });
+
   // ---------- last generated ----------
 
   function renderLast() {
@@ -217,6 +242,85 @@
     window.close();
   });
 
+  // ---------- Adobe Stock auto-fill ----------
+  // Only shown when the active tab is actually on the contributor portal — nothing to do here
+  // otherwise, and showing a dead control elsewhere would just be confusing.
+
+  const ADOBE_STOCK_HOST = "contributor.stock.adobe.com";
+  let adobeStockTabId = null;
+
+  async function initAdobeStockSection() {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    let isAdobeStock = false;
+    try {
+      isAdobeStock = Boolean(tab?.url) && new URL(tab.url).hostname === ADOBE_STOCK_HOST;
+    } catch (_) {
+      isAdobeStock = false;
+    }
+    adobeStockDivider.hidden = !isAdobeStock;
+    adobeStockSection.hidden = !isAdobeStock;
+    if (!isAdobeStock) return;
+
+    adobeStockTabId = tab.id;
+    adobeStockToggle.checked = Boolean(settings.adobeStock && settings.adobeStock.enabled);
+    await renderAdobeStockStatus();
+  }
+
+  async function renderAdobeStockStatus() {
+    const enabled = Boolean(settings.adobeStock && settings.adobeStock.enabled);
+    adobeStockActions.hidden = !enabled;
+    if (!enabled) {
+      adobeStockStatus.hidden = true;
+      return;
+    }
+    try {
+      const res = await chrome.tabs.sendMessage(adobeStockTabId, { type: "ADOBE_STOCK_STATUS" });
+      if (res?.selectorsReady) {
+        adobeStockStatus.hidden = true;
+      } else {
+        adobeStockStatus.hidden = false;
+        adobeStockStatus.textContent = "Not yet configured — click \"Copy page diagnostics\" and send the result to Claude.";
+      }
+    } catch (_) {
+      adobeStockStatus.hidden = false;
+      adobeStockStatus.textContent = "Reload the Adobe Stock tab to activate this.";
+    }
+  }
+
+  adobeStockToggle.addEventListener("change", async () => {
+    settings.adobeStock = settings.adobeStock || {};
+    settings.adobeStock.enabled = adobeStockToggle.checked;
+    settings = await chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", payload: { adobeStock: settings.adobeStock } });
+    await renderAdobeStockStatus();
+  });
+
+  adobeStockRunBtn.addEventListener("click", async () => {
+    if (!adobeStockTabId) return;
+    const original = adobeStockRunBtn.textContent;
+    adobeStockRunBtn.textContent = "Running…";
+    try {
+      await chrome.tabs.sendMessage(adobeStockTabId, { type: "ADOBE_STOCK_RUN_NOW" });
+    } catch (_) {
+      // handled by the status line already
+    }
+    setTimeout(() => (adobeStockRunBtn.textContent = original), 1500);
+  });
+
+  adobeStockDiagBtn.addEventListener("click", async () => {
+    if (!adobeStockTabId) return;
+    const original = adobeStockDiagBtn.textContent;
+    adobeStockDiagBtn.textContent = "Collecting…";
+    try {
+      const res = await chrome.tabs.sendMessage(adobeStockTabId, { type: "ADOBE_STOCK_COLLECT_DIAGNOSTICS" });
+      if (!res?.ok) throw new Error(res?.message || "Failed to collect diagnostics.");
+      await navigator.clipboard.writeText(JSON.stringify(res.report, null, 2));
+      adobeStockDiagBtn.textContent = "Copied ✓ — paste to Claude";
+    } catch (_) {
+      adobeStockDiagBtn.textContent = "Failed — reload page & retry";
+    }
+    setTimeout(() => (adobeStockDiagBtn.textContent = original), 2500);
+  });
+
   // ---------- settings ----------
 
   settingsBtn.addEventListener("click", () => {
@@ -227,5 +331,7 @@
   renderWarning();
   renderIpSafeToggle();
   renderIconMode();
+  renderHoverButton();
   renderLast();
+  initAdobeStockSection();
 })();

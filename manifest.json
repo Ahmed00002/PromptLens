@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "PromptLens — Image to AI Prompt",
   "short_name": "PromptLens",
-  "version": "1.4.0",
-  "description": "Right-click any image (or select several at once) to instantly generate detailed, IP-safe AI art prompts using Groq, Gemini, or Mistral vision models.",
+  "version": "1.12.1",
+  "description": "Hover, right-click, or select several images at once to generate detailed AI art prompts using Groq, Gemini, or Mistral vision models. Includes Adobe Stock metadata auto-fill.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -27,6 +27,11 @@
     {
       "matches": ["https://*/*", "http://*/*"],
       "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://contributor.stock.adobe.com/*"],
+      "js": ["constants.js", "adobe-stock.js"],
       "run_at": "document_idle"
     }
   ],

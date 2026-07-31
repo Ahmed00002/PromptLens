@@ -10,6 +10,21 @@
   const iconGridRowsInput = document.getElementById("icon-grid-rows");
   const iconGridColsInput = document.getElementById("icon-grid-cols");
   const iconGridTotal = document.getElementById("icon-grid-total");
+  const hoverButtonToggle = document.getElementById("hover-button-toggle");
+
+  const adobeStockEnabledToggle = document.getElementById("adobe-stock-enabled-toggle");
+  const adobeStockFields = document.getElementById("adobe-stock-fields");
+  const adobeStockAutoTrigger = document.getElementById("adobe-stock-auto-trigger");
+  const adobeStockDisclosure = document.getElementById("adobe-stock-disclosure");
+  const adobeStockSetupStatus = document.getElementById("adobe-stock-setup-status");
+  const asTitleMin = document.getElementById("as-title-min");
+  const asTitleMax = document.getElementById("as-title-max");
+  const asTitleRangeValue = document.getElementById("as-title-range-value");
+  const asKeywordMin = document.getElementById("as-keyword-min");
+  const asKeywordMax = document.getElementById("as-keyword-max");
+  const asKeywordRangeValue = document.getElementById("as-keyword-range-value");
+  const asKeywordType = document.getElementById("as-keyword-type");
+  const asKeywordTypeHint = document.getElementById("as-keyword-type-hint");
   const historyEl = document.getElementById("history");
   const saveStatusEl = document.getElementById("save-status");
   const clearHistoryBtn = document.getElementById("clear-history");
@@ -246,6 +261,156 @@
     queueSave({ iconMode: settings.iconMode });
   });
 
+  function renderHoverButton() {
+    hoverButtonToggle.checked = Boolean(settings.hoverButton && settings.hoverButton.enabled);
+  }
+
+  hoverButtonToggle.addEventListener("change", () => {
+    settings.hoverButton = { ...settings.hoverButton, enabled: hoverButtonToggle.checked };
+    queueSave({ hoverButton: settings.hoverButton });
+  });
+
+  async function renderAdobeStockStatus() {
+    let tabs = [];
+    try {
+      tabs = await chrome.tabs.query({ url: "https://contributor.stock.adobe.com/*" });
+    } catch (_) {
+      tabs = [];
+    }
+    const pendingText =
+      'Selectors not yet confirmed — open the Adobe Stock contributor portal, then use the popup\'s "Copy page diagnostics" button and send the result to Claude.';
+    if (!tabs.length) {
+      adobeStockSetupStatus.textContent = pendingText;
+      adobeStockSetupStatus.className = "setup-status is-pending";
+      return;
+    }
+    try {
+      const res = await chrome.tabs.sendMessage(tabs[0].id, { type: "ADOBE_STOCK_STATUS" });
+      if (res?.selectorsReady) {
+        adobeStockSetupStatus.textContent = "✓ Configured and ready.";
+        adobeStockSetupStatus.className = "setup-status is-ready";
+      } else {
+        adobeStockSetupStatus.textContent = pendingText;
+        adobeStockSetupStatus.className = "setup-status is-pending";
+      }
+    } catch (_) {
+      adobeStockSetupStatus.textContent = pendingText;
+      adobeStockSetupStatus.className = "setup-status is-pending";
+    }
+  }
+
+  function renderKeywordTypeOptions() {
+    if (asKeywordType.options.length) return;
+    KEYWORD_TYPE_ORDER.forEach((typeId) => {
+      const meta = KEYWORD_TYPE_META[typeId];
+      const option = document.createElement("option");
+      option.value = typeId;
+      option.textContent = meta.label;
+      asKeywordType.appendChild(option);
+    });
+  }
+
+  function renderAdobeStock() {
+    const enabled = Boolean(settings.adobeStock && settings.adobeStock.enabled);
+    adobeStockEnabledToggle.checked = enabled;
+    adobeStockFields.classList.toggle("is-disabled", !enabled);
+    adobeStockAutoTrigger.checked = Boolean(settings.adobeStock && settings.adobeStock.autoTrigger);
+    adobeStockDisclosure.value = (settings.adobeStock && settings.adobeStock.aiDisclosure) || "off";
+
+    const as = settings.adobeStock || {};
+    asTitleMin.value = as.titleMinLength ?? 20;
+    asTitleMax.value = as.titleMaxLength ?? 70;
+    asKeywordMin.value = as.keywordMin ?? 30;
+    asKeywordMax.value = as.keywordMax ?? 49;
+    renderSeekLabels();
+
+    renderKeywordTypeOptions();
+    const keywordType = as.keywordType || "mixed";
+    asKeywordType.value = keywordType;
+    asKeywordTypeHint.textContent = (KEYWORD_TYPE_META[keywordType] || KEYWORD_TYPE_META.mixed).description;
+
+    renderAdobeStockStatus();
+  }
+
+  function renderSeekLabels() {
+    asTitleRangeValue.textContent = `${asTitleMin.value}–${asTitleMax.value} chars`;
+    asKeywordRangeValue.textContent = `${asKeywordMin.value}–${asKeywordMax.value}`;
+  }
+
+  asTitleMin.addEventListener("input", () => {
+    if (Number(asTitleMin.value) > Number(asTitleMax.value)) asTitleMax.value = asTitleMin.value;
+    renderSeekLabels();
+  });
+  asTitleMin.addEventListener("change", () => {
+    settings.adobeStock = {
+      ...settings.adobeStock,
+      titleMinLength: Number(asTitleMin.value),
+      titleMaxLength: Number(asTitleMax.value),
+    };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  asTitleMax.addEventListener("input", () => {
+    if (Number(asTitleMax.value) < Number(asTitleMin.value)) asTitleMin.value = asTitleMax.value;
+    renderSeekLabels();
+  });
+  asTitleMax.addEventListener("change", () => {
+    settings.adobeStock = {
+      ...settings.adobeStock,
+      titleMinLength: Number(asTitleMin.value),
+      titleMaxLength: Number(asTitleMax.value),
+    };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  asKeywordMin.addEventListener("input", () => {
+    if (Number(asKeywordMin.value) > Number(asKeywordMax.value)) asKeywordMax.value = asKeywordMin.value;
+    renderSeekLabels();
+  });
+  asKeywordMin.addEventListener("change", () => {
+    settings.adobeStock = {
+      ...settings.adobeStock,
+      keywordMin: Number(asKeywordMin.value),
+      keywordMax: Number(asKeywordMax.value),
+    };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  asKeywordMax.addEventListener("input", () => {
+    if (Number(asKeywordMax.value) < Number(asKeywordMin.value)) asKeywordMin.value = asKeywordMax.value;
+    renderSeekLabels();
+  });
+  asKeywordMax.addEventListener("change", () => {
+    settings.adobeStock = {
+      ...settings.adobeStock,
+      keywordMin: Number(asKeywordMin.value),
+      keywordMax: Number(asKeywordMax.value),
+    };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  adobeStockEnabledToggle.addEventListener("change", () => {
+    settings.adobeStock = { ...settings.adobeStock, enabled: adobeStockEnabledToggle.checked };
+    renderAdobeStock();
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  adobeStockAutoTrigger.addEventListener("change", () => {
+    settings.adobeStock = { ...settings.adobeStock, autoTrigger: adobeStockAutoTrigger.checked };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  adobeStockDisclosure.addEventListener("change", () => {
+    settings.adobeStock = { ...settings.adobeStock, aiDisclosure: adobeStockDisclosure.value };
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
+  asKeywordType.addEventListener("change", () => {
+    settings.adobeStock = { ...settings.adobeStock, keywordType: asKeywordType.value };
+    asKeywordTypeHint.textContent = (KEYWORD_TYPE_META[asKeywordType.value] || KEYWORD_TYPE_META.mixed).description;
+    queueSave({ adobeStock: settings.adobeStock });
+  });
+
   function renderHistory() {
     const history = settings.history || [];
     if (!history.length) {
@@ -280,5 +445,7 @@
   renderStyles();
   renderIpSafe();
   renderIconMode();
+  renderHoverButton();
+  renderAdobeStock();
   renderHistory();
 })();
