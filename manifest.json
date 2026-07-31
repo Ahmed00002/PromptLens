@@ -33,6 +33,14 @@
       "matches": ["https://contributor.stock.adobe.com/*"],
       "js": ["constants.js", "adobe-stock.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://stock.adobe.com/contributor/*",
+        "https://stock.adobe.com/*/contributor/*"
+      ],
+      "js": ["adobe-contributor-profile.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
