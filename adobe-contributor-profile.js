@@ -70,7 +70,7 @@
         .pl-panel {
           position: fixed; top: 90px; right: 20px; z-index: 2147483000;
           width: 220px; max-width: calc(100vw - 32px);
-          background: #12141C; color: #EDEBE4;
+          background: #0b0c11; color: #f4f1e8;
           border: 1px solid rgba(232, 163, 61, 0.3);
           border-radius: 14px;
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -80,20 +80,20 @@
         .pl-panel-label {
           margin: 0 0 10px;
           font: 700 10.5px/1 ui-monospace, "SF Mono", "Cascadia Code", monospace;
-          letter-spacing: 0.07em; text-transform: uppercase; color: #8B8F9C;
+          letter-spacing: 0.07em; text-transform: uppercase; color: #7c7f8f;
         }
         .pl-sort-btn {
           display: block; width: 100%; box-sizing: border-box;
           appearance: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 9px;
           padding: 9px 10px; margin-bottom: 8px;
-          background: #191C26; color: #EDEBE4;
+          background: #14161f; color: #f4f1e8;
           font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           text-align: left; cursor: pointer; transition: filter 0.12s ease, background 0.12s ease;
         }
         .pl-sort-btn:last-of-type { margin-bottom: 0; }
         .pl-sort-btn:hover { background: rgba(255,255,255,0.08); }
         .pl-sort-btn.is-active {
-          background: #E8A33D; color: #12141C; border-color: #E8A33D;
+          background: #E8A33D; color: #0b0c11; border-color: #E8A33D;
         }
         .pl-sort-btn.is-active:hover { filter: brightness(1.05); }
       </style>

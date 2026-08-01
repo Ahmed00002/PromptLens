@@ -9,8 +9,8 @@
   <div class="popup">
     <header class="topbar">
       <div class="brand">
-        <svg width="20" height="20" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" id="brand-mark"></svg>
-        <span class="brand-name">PromptLens</span>
+        <svg width="22" height="22" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" id="brand-mark"></svg>
+        <span class="brand-name">Prompt<em>Lens</em></span>
       </div>
       <button class="icon-btn" id="open-settings" type="button" title="Settings" aria-label="Open settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -20,142 +20,158 @@
       </button>
     </header>
 
-    <section class="section">
-      <div class="segmented" id="provider-segmented"></div>
-      <p class="inline-warning" id="no-key-warning" hidden>No API key set — open settings to add one.</p>
-    </section>
-
-    <div class="hr"></div>
-
-    <section class="section">
-      <div class="row">
-        <div class="row-copy">
-          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"></path>
-          </svg>
-          <div>
-            <p class="row-title">IP-safe mode</p>
-            <p class="row-sub">No text, brands, logos, or IP in prompts</p>
-          </div>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="ip-safe-toggle" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-      </div>
-      <button type="button" class="link-btn" id="ip-safe-customize-btn">
-        <span>Customize</span><span class="chevron">▾</span>
-      </button>
-      <div class="check-list" id="ip-safe-checks" hidden></div>
-    </section>
-
-    <div class="hr"></div>
-
-    <section class="section">
-      <div class="row">
-        <div class="row-copy">
-          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
-            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
-            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
-          </svg>
-          <div>
-            <p class="row-title">Icon mode</p>
-            <p class="row-sub">Icons/icon sets get a solid white background</p>
-          </div>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="icon-mode-toggle" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-      </div>
-      <div class="icon-grid-block" id="icon-grid-block" hidden>
-        <p class="grid-label">Icons per bundle</p>
-        <div class="chip-row" id="icon-grid-chips"></div>
-        <div class="grid-custom" id="icon-grid-custom" hidden>
-          <input type="number" min="1" max="12" class="grid-input" id="icon-grid-rows" aria-label="Rows" />
-          <span class="grid-x">×</span>
-          <input type="number" min="1" max="12" class="grid-input" id="icon-grid-cols" aria-label="Columns" />
-          <span class="grid-total" id="icon-grid-total"></span>
-        </div>
-      </div>
-    </section>
-
-    <div class="hr"></div>
-
-    <section class="section">
-      <div class="row">
-        <div class="row-copy">
-          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"></path>
-          </svg>
-          <div>
-            <p class="row-title">Hover quick-action</p>
-            <p class="row-sub">A small button appears over images on hover</p>
-          </div>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="hover-button-toggle" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-      </div>
-    </section>
-
-    <div class="hr"></div>
-
-    <section class="section">
+    <!-- Primary action: this is what a first-time user needs to see immediately -->
+    <section class="hero">
+      <p class="hero-hint">
+        <kbd>Right-click</kbd> any image on a page →
+        <strong>Generate AI Prompt</strong>
+      </p>
       <button type="button" class="primary-btn" id="select-mode-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2"></rect>
           <circle cx="8.5" cy="8.5" r="1.5"></circle>
           <path d="m21 15-5-5L5 21"></path>
         </svg>
-        <span>Select images on this page</span>
+        <span>Select images to batch-generate</span>
       </button>
-      <p class="row-sub select-mode-sub">Batch-generate prompts for several images at once.</p>
+    </section>
+
+    <section class="section">
+      <p class="group-label">Provider</p>
+      <div class="segmented" id="provider-segmented"></div>
+      <p class="inline-warning" id="no-key-warning" hidden>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        No API key set — open settings to add one.
+      </p>
+    </section>
+
+    <section class="section">
+      <p class="group-label">Modes</p>
+      <div class="card-group">
+        <div class="mode-row">
+          <div class="row">
+            <div class="row-copy">
+              <span class="row-icon-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"></path>
+                </svg>
+              </span>
+              <div>
+                <p class="row-title">IP-safe mode</p>
+                <p class="row-sub">No text, brands, logos, or IP in prompts</p>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="ip-safe-toggle" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <button type="button" class="link-btn" id="ip-safe-customize-btn">
+            <span>Customize</span><span class="chevron">▾</span>
+          </button>
+          <div class="check-list" id="ip-safe-checks" hidden></div>
+        </div>
+
+        <div class="mode-row">
+          <div class="row">
+            <div class="row-copy">
+              <span class="row-icon-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                  <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                  <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+              </span>
+              <div>
+                <p class="row-title">Icon mode</p>
+                <p class="row-sub">Icons/icon sets get a solid white background</p>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="icon-mode-toggle" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <div class="icon-grid-block" id="icon-grid-block" hidden>
+            <p class="grid-label">Icons per bundle</p>
+            <div class="chip-row" id="icon-grid-chips"></div>
+            <div class="grid-custom" id="icon-grid-custom" hidden>
+              <input type="number" min="1" max="12" class="grid-input" id="icon-grid-rows" aria-label="Rows" />
+              <span class="grid-x">×</span>
+              <input type="number" min="1" max="12" class="grid-input" id="icon-grid-cols" aria-label="Columns" />
+              <span class="grid-total" id="icon-grid-total"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mode-row">
+          <div class="row">
+            <div class="row-copy">
+              <span class="row-icon-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"></path>
+                </svg>
+              </span>
+              <div>
+                <p class="row-title">Hover quick-action</p>
+                <p class="row-sub">A small button appears over images on hover</p>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="hover-button-toggle" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+        </div>
+      </div>
     </section>
 
     <div class="hr" id="adobe-stock-divider" hidden></div>
-
     <section class="section" id="adobe-stock-section" hidden>
-      <div class="row">
-        <div class="row-copy">
-          <svg class="row-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2 2 7l10 5 10-5-10-5Z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-          <div>
-            <p class="row-title">Adobe Stock auto-fill</p>
-            <p class="row-sub">Auto-generate title + keywords for uploaded files</p>
+      <p class="group-label">This page</p>
+      <div class="card-group">
+        <div class="mode-row">
+          <div class="row">
+            <div class="row-copy">
+              <span class="row-icon-badge row-icon-badge--adobe">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2 2 7l10 5 10-5-10-5Z"></path>
+                  <path d="M2 17l10 5 10-5"></path>
+                  <path d="M2 12l10 5 10-5"></path>
+                </svg>
+              </span>
+              <div>
+                <p class="row-title">Adobe Stock auto-fill</p>
+                <p class="row-sub">Auto-generate title + keywords for uploaded files</p>
+              </div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="adobe-stock-toggle" />
+              <span class="switch-track"><span class="switch-thumb"></span></span>
+            </label>
+          </div>
+          <p class="inline-warning" id="adobe-stock-status" hidden></p>
+          <div class="adobe-stock-actions" id="adobe-stock-actions" hidden>
+            <button type="button" class="link-btn" id="adobe-stock-run-btn">Run now</button>
+            <button type="button" class="link-btn" id="adobe-stock-diag-btn">Copy page diagnostics</button>
           </div>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="adobe-stock-toggle" />
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-        </label>
-      </div>
-      <p class="inline-warning" id="adobe-stock-status" hidden></p>
-      <div class="adobe-stock-actions" id="adobe-stock-actions" hidden>
-        <button type="button" class="link-btn" id="adobe-stock-run-btn">Run now</button>
-        <button type="button" class="link-btn" id="adobe-stock-diag-btn">Copy page diagnostics</button>
       </div>
     </section>
 
     <div class="hr" id="last-divider" hidden></div>
-
     <section class="section" id="last-section" hidden>
-      <div class="last-head">
-        <p class="row-title">Last prompt</p>
-        <span class="badge" id="last-badge" hidden>IP-safe</span>
-        <span class="badge" id="last-icon-badge" hidden>Icon</span>
+      <p class="group-label">Last prompt</p>
+      <div class="result-card">
+        <div class="last-head">
+          <span class="badge" id="last-badge" hidden>IP-safe</span>
+          <span class="badge" id="last-icon-badge" hidden>Icon</span>
+        </div>
+        <p class="last-text" id="last-text"></p>
+        <button type="button" class="link-btn link-btn--accent" id="last-copy">Copy prompt</button>
       </div>
-      <p class="last-text" id="last-text"></p>
-      <button type="button" class="link-btn" id="last-copy">Copy prompt</button>
     </section>
-
-    <p class="footer-hint">Right-click any image → <strong>Generate AI Prompt</strong><br />or select several above for batch mode</p>
   </div>
   <script src="constants.js"></script>
   <script src="popup.js"></script>

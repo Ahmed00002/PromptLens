@@ -5,6 +5,7 @@
 
   const CARD_CSS = `
     :host { all: initial; }
+    [hidden] { display: none !important; }
     .pl-card {
       position: fixed;
       right: 20px;
@@ -12,8 +13,8 @@
       z-index: 2147483647;
       width: 340px;
       max-width: calc(100vw - 40px);
-      background: #191C26;
-      color: #EDEBE4;
+      background: #14161f;
+      color: #f4f1e8;
       border: 1px solid rgba(232, 163, 61, 0.28);
       border-radius: 14px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -46,36 +47,36 @@
       appearance: none;
       background: transparent;
       border: none;
-      color: #8B8F9C;
+      color: #7c7f8f;
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
       padding: 2px 4px;
       border-radius: 6px;
     }
-    .pl-close:hover { background: rgba(255,255,255,0.08); color: #EDEBE4; }
+    .pl-close:hover { background: rgba(255,255,255,0.08); color: #f4f1e8; }
     .pl-body { padding: 14px; }
 
     .pl-loading { display: flex; align-items: center; gap: 12px; padding: 4px 0 8px; }
     .pl-spinner { width: 28px; height: 28px; flex: none; animation: pl-spin 1.1s linear infinite; }
     @keyframes pl-spin { to { transform: rotate(360deg); } }
-    .pl-loading-text { color: #C7C9D1; font-size: 12.5px; }
+    .pl-loading-text { color: #b7b9c4; font-size: 12.5px; }
 
     .pl-prompt {
       max-height: 220px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
-      background: #12141C;
+      background: #0b0c11;
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 10px;
       padding: 10px 12px;
       margin: 0 0 12px;
-      color: #EDEBE4;
+      color: #f4f1e8;
     }
     .pl-meta {
       font: 500 10.5px/1 ui-monospace, "SF Mono", "Cascadia Code", monospace;
-      color: #8B8F9C;
+      color: #7c7f8f;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin: 0 0 8px;
@@ -96,22 +97,22 @@
       cursor: pointer;
       transition: filter 0.12s ease, background 0.12s ease;
     }
-    .pl-btn-primary { background: #E8A33D; color: #12141C; }
+    .pl-btn-primary { background: #E8A33D; color: #0b0c11; }
     .pl-btn-primary:hover { filter: brightness(1.08); }
-    .pl-btn-secondary { background: rgba(255,255,255,0.06); color: #EDEBE4; }
+    .pl-btn-secondary { background: rgba(255,255,255,0.06); color: #f4f1e8; }
     .pl-btn-secondary:hover { background: rgba(255,255,255,0.12); }
-    .pl-error { color: #E8907A; background: rgba(193, 87, 61, 0.12); border: 1px solid rgba(193, 87, 61, 0.35); border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; }
+    .pl-error { color: #f0a494; background: rgba(226, 96, 75, 0.12); border: 1px solid rgba(226, 96, 75, 0.35); border-radius: 10px; padding: 10px 12px; margin: 0 0 12px; }
     .pl-link { color: #E8A33D; text-decoration: underline; cursor: pointer; }
   `;
 
   function apertureSvg(spinning) {
     return `
       <svg class="${spinning ? "pl-spinner" : "pl-mark"}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-        <rect width="32" height="32" rx="7" fill="#12141C"/>
+        <rect width="32" height="32" rx="7" fill="#0b0c11"/>
         <g fill="#E8A33D">
           ${hexBlades(16, 16, 10).join("")}
         </g>
-        <polygon points="${hexPoints(16, 16, 4.3).join(" ")}" fill="#12141C"/>
+        <polygon points="${hexPoints(16, 16, 4.3).join(" ")}" fill="#0b0c11"/>
       </svg>`;
   }
 
@@ -277,6 +278,7 @@
 
   const SELECT_CSS = `
     :host { all: initial; }
+    [hidden] { display: none !important; }
     .pl-mark { width: 16px; height: 16px; flex: none; }
     .pls-bar {
       position: fixed;
@@ -285,8 +287,8 @@
       z-index: 2147483647;
       width: 320px;
       max-width: calc(100vw - 40px);
-      background: #191C26;
-      color: #EDEBE4;
+      background: #14161f;
+      color: #f4f1e8;
       border: 1px solid rgba(232, 163, 61, 0.28);
       border-radius: 14px;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -302,33 +304,33 @@
       font: 600 11px/1 ui-monospace, "SF Mono", "Cascadia Code", monospace;
       letter-spacing: 0.08em; text-transform: uppercase; color: #E8A33D; flex: 1;
     }
-    .pls-close { appearance: none; background: transparent; border: none; color: #8B8F9C; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 6px; }
-    .pls-close:hover { background: rgba(255,255,255,0.08); color: #EDEBE4; }
+    .pls-close { appearance: none; background: transparent; border: none; color: #7c7f8f; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 4px; border-radius: 6px; }
+    .pls-close:hover { background: rgba(255,255,255,0.08); color: #f4f1e8; }
     .pls-body { padding: 14px; }
-    .pls-hint { margin: 0 0 10px; font-size: 12px; color: #C7C9D1; }
+    .pls-hint { margin: 0 0 10px; font-size: 12px; color: #b7b9c4; }
     .pls-count-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .pls-count { font-weight: 700; font-size: 13px; color: #EDEBE4; }
+    .pls-count { font-weight: 700; font-size: 13px; color: #f4f1e8; }
     .pls-mini-actions { display: flex; gap: 6px; }
     .pls-mini-btn {
       appearance: none; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-      color: #C7C9D1; border-radius: 7px; padding: 4px 8px; font-size: 11px; font-weight: 600; cursor: pointer;
+      color: #b7b9c4; border-radius: 7px; padding: 4px 8px; font-size: 11px; font-weight: 600; cursor: pointer;
     }
-    .pls-mini-btn:hover { background: rgba(255,255,255,0.1); color: #EDEBE4; }
+    .pls-mini-btn:hover { background: rgba(255,255,255,0.1); color: #f4f1e8; }
     .pl-btn { appearance: none; border: none; border-radius: 8px; padding: 9px 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; width: 100%; transition: filter 0.12s ease, background 0.12s ease, opacity 0.12s ease; }
-    .pl-btn-primary { background: #E8A33D; color: #12141C; }
+    .pl-btn-primary { background: #E8A33D; color: #0b0c11; }
     .pl-btn-primary:hover { filter: brightness(1.08); }
     .pl-btn-primary:disabled { opacity: 0.45; cursor: default; filter: none; }
-    .pl-btn-secondary { background: rgba(255,255,255,0.06); color: #EDEBE4; flex: 1; }
+    .pl-btn-secondary { background: rgba(255,255,255,0.06); color: #f4f1e8; flex: 1; }
     .pl-btn-secondary:hover { background: rgba(255,255,255,0.12); }
     .pls-actions-row { display: flex; gap: 8px; margin-top: 10px; }
     .pls-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
-    .pls-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: #12141C; border: 1px solid rgba(255,255,255,0.05); }
+    .pls-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: #0b0c11; border: 1px solid rgba(255,255,255,0.05); }
     .pls-row-status { flex: none; width: 16px; text-align: center; font-size: 12px; }
-    .pls-row-status.is-error { color: #E8907A; }
-    .pls-row-status.is-done { color: #7FBF7F; }
+    .pls-row-status.is-error { color: #f0a494; }
+    .pls-row-status.is-done { color: #6fbf8b; }
     .pls-row-status.is-loading { color: #E8A33D; animation: pls-pulse 1s ease-in-out infinite; }
     @keyframes pls-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
-    .pls-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #C7C9D1; }
+    .pls-row-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: #b7b9c4; }
     .pls-row-copy { appearance: none; border: none; background: rgba(232,163,61,0.14); color: #E8A33D; border-radius: 6px; padding: 3px 7px; font-size: 10.5px; font-weight: 700; cursor: pointer; flex: none; }
     .pls-row-copy:hover { background: rgba(232,163,61,0.24); }
   `;
@@ -596,7 +598,7 @@
       width: ${HOVER_BTN_SIZE}px;
       height: ${HOVER_BTN_SIZE}px;
       border-radius: 999px;
-      background: #12141C;
+      background: #0b0c11;
       border: 1px solid rgba(232, 163, 61, 0.55);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.3);
       display: flex;

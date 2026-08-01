@@ -507,16 +507,16 @@
       @keyframes pl-fade-in { from { opacity: 0; } to { opacity: 1; } }
       .pl-modal {
         width: 340px; max-width: calc(100vw - 40px);
-        background: #191C26; color: #EDEBE4;
+        background: #14161f; color: #f4f1e8;
         border: 1px solid rgba(232, 163, 61, 0.3);
         border-radius: 14px; padding: 18px;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
       }
       .pl-modal-title { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: #E8A33D; }
-      .pl-modal-body { margin: 0 0 14px; font-size: 12.5px; line-height: 1.5; color: #C7C9D1; }
+      .pl-modal-body { margin: 0 0 14px; font-size: 12.5px; line-height: 1.5; color: #b7b9c4; }
       .pl-modal-checkbox {
         display: flex; align-items: flex-start; gap: 8px;
-        font-size: 11.5px; color: #C7C9D1; margin-bottom: 16px; cursor: pointer;
+        font-size: 11.5px; color: #b7b9c4; margin-bottom: 16px; cursor: pointer;
       }
       .pl-modal-checkbox input { margin-top: 2px; accent-color: #E8A33D; }
       .pl-modal-actions { display: flex; gap: 8px; }
@@ -524,9 +524,9 @@
         flex: 1; appearance: none; border: none; border-radius: 8px;
         padding: 9px 10px; font-size: 12.5px; font-weight: 600; cursor: pointer;
       }
-      .pl-modal-btn-secondary { background: rgba(255,255,255,0.06); color: #EDEBE4; }
+      .pl-modal-btn-secondary { background: rgba(255,255,255,0.06); color: #f4f1e8; }
       .pl-modal-btn-secondary:hover { background: rgba(255,255,255,0.12); }
-      .pl-modal-btn-primary { background: #E8A33D; color: #12141C; }
+      .pl-modal-btn-primary { background: #E8A33D; color: #0b0c11; }
       .pl-modal-btn-primary:hover { filter: brightness(1.08); }
     `;
     shadow.appendChild(style);
@@ -594,7 +594,7 @@
         .pl-panel {
           position: fixed; top: 90px; right: 20px; z-index: 2147483000;
           width: 340px; max-width: calc(100vw - 32px);
-          background: #12141C; color: #EDEBE4;
+          background: #0b0c11; color: #f4f1e8;
           border: 1px solid rgba(232, 163, 61, 0.3);
           border-radius: 16px;
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
@@ -604,7 +604,7 @@
         }
         .pl-panel-head {
           display: flex; align-items: center; gap: 8px;
-          padding: 13px 14px; background: #191C26;
+          padding: 13px 14px; background: #14161f;
           border-bottom: 1px solid rgba(255,255,255,0.06);
           cursor: move; touch-action: none;
         }
@@ -613,13 +613,13 @@
           letter-spacing: 0.07em; text-transform: uppercase; color: #E8A33D;
         }
         .pl-panel-collapse {
-          appearance: none; border: none; background: transparent; color: #8B8F9C;
+          appearance: none; border: none; background: transparent; color: #7c7f8f;
           cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 6px;
         }
-        .pl-panel-collapse:hover { background: rgba(255,255,255,0.08); color: #EDEBE4; }
+        .pl-panel-collapse:hover { background: rgba(255,255,255,0.08); color: #f4f1e8; }
         .pl-panel-body { padding: 16px; user-select: text; }
         .pl-panel.is-collapsed .pl-panel-body { display: none; }
-        .pl-status { margin: 0 0 12px; font-size: 12.5px; line-height: 1.5; color: #C7C9D1; }
+        .pl-status { margin: 0 0 12px; font-size: 12.5px; line-height: 1.5; color: #b7b9c4; }
         .pl-progress-track {
           height: 4px; border-radius: 999px; background: rgba(255,255,255,0.08);
           margin-bottom: 14px; overflow: hidden;
@@ -631,16 +631,16 @@
         .pl-start-btn {
           width: 100%; appearance: none; border: none; border-radius: 10px;
           padding: 12px; margin-bottom: 18px;
-          background: #E8A33D; color: #12141C;
+          background: #E8A33D; color: #0b0c11;
           font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           cursor: pointer; transition: filter 0.12s ease;
         }
         .pl-start-btn:hover { filter: brightness(1.08); }
-        .pl-start-btn.is-running { background: rgba(255,255,255,0.08); color: #EDEBE4; }
+        .pl-start-btn.is-running { background: rgba(255,255,255,0.08); color: #f4f1e8; }
         .pl-generate-current-btn {
           width: 100%; appearance: none; border: 1px solid rgba(255,255,255,0.14); border-radius: 10px;
           padding: 10px; margin: -8px 0 18px;
-          background: transparent; color: #C7C9D1;
+          background: transparent; color: #b7b9c4;
           font: 700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           cursor: pointer; transition: filter 0.12s ease, background 0.12s ease;
         }
@@ -652,7 +652,7 @@
         }
         .pl-slider-label {
           font: 700 10.5px/1 ui-monospace, "SF Mono", "Cascadia Code", monospace;
-          letter-spacing: 0.05em; text-transform: uppercase; color: #8B8F9C;
+          letter-spacing: 0.05em; text-transform: uppercase; color: #7c7f8f;
         }
         .pl-slider-value {
           font: 700 12px ui-monospace, "SF Mono", "Cascadia Code", monospace; color: #E8A33D;
@@ -674,23 +674,23 @@
         .pl-range::-webkit-slider-thumb {
           pointer-events: auto; -webkit-appearance: none; appearance: none;
           width: 15px; height: 15px; border-radius: 50%;
-          background: #E8A33D; border: 2px solid #12141C; cursor: pointer;
+          background: #E8A33D; border: 2px solid #0b0c11; cursor: pointer;
           box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
         .pl-range::-moz-range-thumb {
           pointer-events: auto; width: 15px; height: 15px; border-radius: 50%;
-          background: #E8A33D; border: 2px solid #12141C; cursor: pointer;
+          background: #E8A33D; border: 2px solid #0b0c11; cursor: pointer;
         }
         .pl-range::-moz-range-track { background: transparent; border: none; }
         .pl-field-group { margin-bottom: 16px; }
         .pl-field-label {
           display: block; margin-bottom: 8px;
           font: 700 10.5px/1 ui-monospace, "SF Mono", "Cascadia Code", monospace;
-          letter-spacing: 0.05em; text-transform: uppercase; color: #8B8F9C;
+          letter-spacing: 0.05em; text-transform: uppercase; color: #7c7f8f;
         }
         .pl-select {
           width: 100%; appearance: none; -webkit-appearance: none;
-          background: #191C26; color: #EDEBE4;
+          background: #14161f; color: #f4f1e8;
           border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
           padding: 8px 10px; font-size: 12.5px; font-weight: 600;
           font-family: inherit; cursor: pointer; outline: none;
